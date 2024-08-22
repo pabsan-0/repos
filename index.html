@@ -1,0 +1,197 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>GitHub Repositories</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background-color: #f4f4f4;
+            margin: 0;
+            padding: 0 5% 0 7%;
+        }
+
+        h1 {
+            text-align: center;
+            color: #333;
+        }
+
+        ul {
+            list-style-type: none;
+            padding: 0;
+        }
+
+        .repo-item {
+            background-color: #fff;
+            border: 1px solid #e1e4e8;
+            border-radius: 6px;
+            padding: 16px;
+            margin-bottom: 12px;
+            box-shadow: 0 1px 3px rgba(27,31,35,0.12), 0 8px 24px rgba(27,31,35,0.08);
+            transition: transform 0.2s;
+            text-decoration: none;
+            color: inherit;
+            display: block;
+        }
+
+        .repo-item:hover {
+            transform: translateY(-3px);
+        }
+
+        .repo-item h2 {
+            font-size: 20px;
+            margin: 0;
+            color: #0366d6;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .repo-item .repo-type {
+            font-size: 16px;
+            color: #586069;
+        }
+
+        .repo-item p {
+            margin: 10px 0;
+            color: #586069;
+            font-size: 14px;
+        }
+
+        .repo-item .language-topics {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .repo-item .language {
+            color: #586069;
+            display: flex;
+            align-items: center;
+            font-size: 14px;
+        }
+
+        .repo-item .language .language-color {
+            width: 12px;
+            height: 12px;
+            border-radius: 50%;
+            display: inline-block;
+            margin-right: 8px;
+        }
+
+        .repo-item .topics {
+            text-align: right;
+            font-size: 12px;
+            color: #586069;
+        }
+
+        .repo-item .topics span {
+            background-color: #e1e4e8;
+            border-radius: 3px;
+            padding: 2px 6px;
+            margin-left: 5px;
+            white-space: nowrap;
+        }
+    </style>
+</head>
+<body>
+    <h1>Repositories of pabsan-0</h1>
+    <ul id="repo-list"></ul>
+
+    <script>
+        // Define the API URL
+        const apiUrl = 'https://api.github.com/users/pabsan-0/repos';
+
+        // Function to fetch and parse the data
+        async function getRepos() {
+            try {
+                // Fetch the data from the API
+                const response = await fetch(apiUrl);
+                
+                // Check if the request was successful
+                if (!response.ok) {
+                    throw new Error(`HTTP error! Status: ${response.status}`);
+                }
+
+                // Parse the JSON data
+                const repos = await response.json();
+
+                // Get the HTML element where the repos will be displayed
+                const repoList = document.getElementById('repo-list');
+
+                // Clear any existing content
+                repoList.innerHTML = '';
+
+                // Function to get GitHub language color
+                function getLanguageColor(language) {
+                    const colors = {
+                        'JavaScript': '#f1e05a',
+                        'Python': '#3572A5',
+                        'HTML': '#e34c26',
+                        'CSS': '#563d7c',
+                        'Ruby': '#701516',
+                        'Java': '#b07219',
+                        'PHP': '#4F5D95',
+                        'C++': '#f34b7d',
+                        'C#': '#178600',
+                        'C': '#555555',
+                        'Shell': '#89e051',
+                        'Go': '#00ADD8',
+                        'TypeScript': '#2b7489',
+                        // Add more languages as needed
+                        'Other': '#ccc' // Default gray for unspecified languages
+                    };
+                    return colors[language] || colors['Other']; // Return the color or default to gray
+                }
+
+                // Function to get the appropriate icon for repo type
+                function getRepoIcon(repo) {
+                    if (repo.fork) {
+                        return '<i class="fas fa-code-branch" title="Fork"></i>';
+                    } else if (repo.is_template) {
+                        return '<i class="far fa-file-code" title="Template"></i>';
+                    } else {
+                        return '<i class="fa fa-book" title="Source"></i>';
+                    }
+                }
+
+                // Create list items for each repo and append to the list
+                repos.forEach(repo => {
+                    // Get the first three topics or display a default message if none are available
+                    const topics = repo.topics.slice(0, 3);
+                    const topicsHtml = topics.length > 0 
+                        ? topics.map(topic => `<span>${topic}</span>`).join('')
+                        : '<span>No topics</span>';
+
+                    const language = repo.language || 'Other';
+                    const languageColor = getLanguageColor(language);
+                    const repoIcon = getRepoIcon(repo);
+
+                    const listItem = document.createElement('li');
+                    listItem.innerHTML = `
+                        <a href="${repo.html_url}" class="repo-item" target="_blank">
+                            <h2>${repo.name} <span class="repo-type">${repoIcon}</span></h2>
+                            <p>${repo.description || 'No description available'}</p>
+                            <div class="language-topics">
+                                <span class="language">
+                                    <span class="language-color" style="background-color: ${languageColor};"></span>
+                                    ${language}
+                                </span>
+                                <span class="topics">${topicsHtml}</span>
+                            </div>
+                        </a>
+                    `;
+                    repoList.appendChild(listItem);
+                });
+            } catch (error) {
+                console.error('Error fetching the repository data:', error);
+            }
+        }
+
+        // Call the function to display repos
+        getRepos();
+    </script>
+</body>
+</html>
