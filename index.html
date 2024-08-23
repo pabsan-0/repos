@@ -16,6 +16,48 @@
         h1 {
             text-align: center;
             color: #333;
+            margin-bottom: 10px;
+            padding-top: 2%;
+        }
+
+        .button-container {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            margin: 20px 0;
+            gap: 10px;
+        }
+
+        .button-container button {
+            padding: 10px 20px;
+            font-size: 16px;
+            cursor: pointer;
+            border: none;
+            border-radius: 4px;
+            background-color: #6a737d; /* Softer background color */
+            color: white;
+            transition: background-color 0.3s;
+        }
+
+        .button-container button.active {
+            background-color: #4a5d6f; /* Darker shade for active button */
+        }
+
+        .button-container button:hover {
+            background-color: #5c6f77;
+        }
+
+        /* Style for the container holding the repository list */
+        #repo-wrapper {
+            display: flex;
+            justify-content: center;
+            padding: 0 10px; /* Adjust as needed to add horizontal padding */
+        }
+
+        #repo-container {
+            max-width: 1200px; /* Set the maximum width you want for the container */
+            width: 55%; /* Make the container responsive */
+            box-sizing: border-box; /* Include padding and border in the element's total width and height */
         }
 
         ul {
@@ -94,103 +136,293 @@
             margin-left: 5px;
             white-space: nowrap;
         }
+
+        .topic-title {
+            font-size: 24px;
+            margin-top: 30px;
+            color: #333;
+        }
+
+        /* Style for the sticky footer text */
+        #sticky-footer-text {
+            position: fixed;
+            bottom: 1%;
+            left: 1%;
+            color: #333;
+            font-size: 14px;
+            z-index: 1000; /* Ensure it stays on top */
+        }
+
+        #sticky-footer-text a {
+            color: #0366d6;
+            text-decoration: none;
+        }
+
+        /* Style for the sticky index */
+        #sticky-index {
+            position: fixed;
+            bottom: 10%;
+            left: 1%;
+            background: #fff;
+            border: 1px solid #e1e4e8;
+            border-radius: 6px;
+            padding: 10px;
+            font-size: 18px;
+            width: 12%;
+            color: #333;
+            font-style: bolder;
+            box-shadow: 0 1px 2px rgba(27,31,35,0.12), 0 4px 12px rgba(27,31,35,0.08);
+            z-index: 1000; /* Ensure it stays on top */
+            max-height: 70%; /* Limit the height to ensure it doesn't overflow */
+            overflow-y: auto; /* Add scrolling if the content is too long */
+        }
+
+        #sticky-index a {
+            display: block;
+            color: #0366d6;
+            text-decoration: none;
+            margin-bottom: 8px;
+        }
+
+        #sticky-index a:hover {
+            text-decoration: underline;
+        }
+
+        .sticky-index-item {
+            font-size: 18px;
+            line-height: 1.4;
+        }
     </style>
 </head>
 <body>
     <h1>Repositories of pabsan-0</h1>
-    <ul id="repo-list"></ul>
+    <div class="button-container">
+        <button id="group-by-category" class="active">Group by Category</button>
+        <button id="group-by-topic">Group by Topic</button>
+        <button id="group-by-language">Group by Language</button>
+    </div>
+    <div id="repo-wrapper">
+        <div id="repo-container"></div>
+    </div>
+    <div id="sticky-index"></div> <!-- Sticky index container -->
+    <div id="sticky-footer-text">
+        Showing <span id="repo-count">0</span> public repositories. <a href="https://github.com/pabsan-0/repos" target="_blank">View source on GitHub</a>.
+    </div>
 
     <script>
-        // Define the API URL
         const apiUrl = 'https://api.github.com/users/pabsan-0/repos';
 
-        // Function to fetch and parse the data
+        // Utility function to get GitHub language color
+        function getLanguageColor(language) {
+            const colors = {
+                'JavaScript': '#f1e05a',
+                'Python': '#3572A5',
+                'HTML': '#e34c26',
+                'CSS': '#563d7c',
+                'Ruby': '#701516',
+                'Java': '#b07219',
+                'PHP': '#4F5D95',
+                'C++': '#f34b7d',
+                'C#': '#178600',
+                'C': '#555555',
+                'Shell': '#89e051',
+                'Go': '#00ADD8',
+                'TypeScript': '#2b7489',
+                'Other': '#ccc'
+            };
+            return colors[language] || colors['Other'];
+        }
+
+        // Utility function to get the appropriate icon for repo type
+        function getRepoIcon(repo) {
+            if (repo.fork) {
+                return '<i class="fas fa-code-branch" title="Fork"></i>';
+            } else if (repo.is_template) {
+                return '<i class="far fa-file-code" title="Template"></i>';
+            } else {
+                return '<i class="fa fa-book" title="Source"></i>';
+            }
+        }
+
+        // Function to generate HTML for a single repository
+        function generateRepoHtml(repo) {
+            const language = repo.language || 'Other';
+            const languageColor = getLanguageColor(language);
+            const repoIcon = getRepoIcon(repo);
+
+            return `
+                <li>
+                    <a href="${repo.html_url}" class="repo-item" target="_blank">
+                        <h2 id="${repo.name}">${repo.name} <span class="repo-type">${repoIcon}</span></h2>
+                        <p>${repo.description || 'No description available'}</p>
+                        <div class="language-topics">
+                            <span class="language">
+                                <span class="language-color" style="background-color: ${languageColor};"></span>
+                                ${language}
+                            </span>
+                            <span class="topics">${repo.topics.map(topic => `<span>${topic}</span>`).join('')}</span>
+                        </div>
+                    </a>
+                </li>
+            `;
+        }
+
+        // Function to generate the HTML for a list of repositories
+        function generateRepoListHtml(repos) {
+            return `<ul>${repos.map(generateRepoHtml).join('')}</ul>`;
+        }
+
+        // Function to group repositories by a specific property
+        function groupReposBy(repos, groupByFunc) {
+            return repos.reduce((groups, repo) => {
+                const groupKey = groupByFunc(repo);
+                if (!groups[groupKey]) groups[groupKey] = [];
+                groups[groupKey].push(repo);
+                return groups;
+            }, {});
+        }
+
+        // Function to append a group of repositories to the container
+        function appendGroup(container, groupName, repos) {
+            const groupHtml = `
+                <div id="${groupName}" class="repo-group">
+                    <h2 class="topic-title">${groupName}</h2>
+                    ${generateRepoListHtml(repos)}
+                </div>
+            `;
+            container.innerHTML += groupHtml;
+        }
+
+        // Function to update sticky index
+        function updateStickyIndex(groups) {
+            const stickyIndex = document.getElementById('sticky-index');
+            stickyIndex.innerHTML = ''; // Clear the current index
+            stickyIndex.style.display = 'block' // enable visualization
+
+            if (groups.length > 0) {
+                const indexHtml = groups.map(group => `<a href="#${group}" class="sticky-index-item">${group}</a>`).join(' ');
+                stickyIndex.innerHTML = indexHtml;
+            }
+
+        }
+
+        // Function to render repositories grouped by category
+        function renderGroupedRepos(groupedRepos) {
+            const repoContainer = document.getElementById('repo-container');
+            repoContainer.innerHTML = ''; // Clear the container
+
+            const sortedKeys = Object.keys(groupedRepos).filter(key => key !== 'Other');
+            const otherRepos = groupedRepos['Other'] || [];
+
+            updateStickyIndex(sortedKeys.concat('Other')); // Update sticky index
+
+            sortedKeys.forEach(group => {
+                appendGroup(repoContainer, group, groupedRepos[group]);
+            });
+
+            if (otherRepos.length > 0) {
+                appendGroup(repoContainer, 'Other', otherRepos);
+            }
+
+        }
+
+        // Function to display repositories grouped by category
+        function displayReposByCategory(repos) {
+            const groupedByCategory = groupReposBy(repos, (repo) => {
+                const relevantTopics = repo.topics.filter(topic => topic.startsWith('repos-'));
+                return relevantTopics.length > 0 ? relevantTopics.join(', ').replace(/^repos-/, '') : 'Other';
+            });
+            renderGroupedRepos(groupedByCategory);
+        }
+
+        // Function to display repositories grouped by language
+        function displayReposByLanguage(repos) {
+            const groupedByLanguage = groupReposBy(repos, (repo) => repo.language || 'Other');
+            renderGroupedRepos(groupedByLanguage);
+        }
+
+        // Function to display repositories grouped by topic
+        function displayReposByTopic(repos) {
+            const groupedByTopic = groupReposBy(repos, (repo) => {
+                const relevantTopics = repo.topics.filter(topic => !topic.startsWith('repos-'));
+                return relevantTopics.length > 0 ? relevantTopics.join(', ') : 'Other';
+            });
+            renderGroupedRepos(groupedByTopic);
+        }
+
+        // Function to display repositories without grouping
+        function displayReposNoGroups(repos) {
+            const repoContainer = document.getElementById('repo-container');
+            repoContainer.innerHTML = generateRepoListHtml(repos);
+
+            // hide sticky index, must be cleared when brought up again
+            document.getElementById('sticky-index').style.display = 'none';
+        }
+
+        // Function to update button styles
+        function updateButtonStyles(activeButtonId) {
+            const buttons = document.querySelectorAll('.button-container button');
+            buttons.forEach(button => {
+                button.classList.toggle('active', button.id === activeButtonId);
+            });
+        }
+
+        // Function to fetch and display repositories
         async function getRepos() {
             try {
-                // Fetch the data from the API
                 const response = await fetch(apiUrl);
-                
-                // Check if the request was successful
-                if (!response.ok) {
-                    throw new Error(`HTTP error! Status: ${response.status}`);
-                }
-
-                // Parse the JSON data
+                if (!response.ok) throw new Error(`HTTP error! Status: ${response.status}`);
                 const repos = await response.json();
 
-                // Get the HTML element where the repos will be displayed
-                const repoList = document.getElementById('repo-list');
+                document.getElementById('repo-count').textContent = repos.length;
 
-                // Clear any existing content
-                repoList.innerHTML = '';
+                const urlParams = new URLSearchParams(window.location.search);
+                const initialGrouping = urlParams.get('groupby') || 'category';
 
-                // Function to get GitHub language color
-                function getLanguageColor(language) {
-                    const colors = {
-                        'JavaScript': '#f1e05a',
-                        'Python': '#3572A5',
-                        'HTML': '#e34c26',
-                        'CSS': '#563d7c',
-                        'Ruby': '#701516',
-                        'Java': '#b07219',
-                        'PHP': '#4F5D95',
-                        'C++': '#f34b7d',
-                        'C#': '#178600',
-                        'C': '#555555',
-                        'Shell': '#89e051',
-                        'Go': '#00ADD8',
-                        'TypeScript': '#2b7489',
-                        // Add more languages as needed
-                        'Other': '#ccc' // Default gray for unspecified languages
-                    };
-                    return colors[language] || colors['Other']; // Return the color or default to gray
-                }
-
-                // Function to get the appropriate icon for repo type
-                function getRepoIcon(repo) {
-                    if (repo.fork) {
-                        return '<i class="fas fa-code-branch" title="Fork"></i>';
-                    } else if (repo.is_template) {
-                        return '<i class="far fa-file-code" title="Template"></i>';
+                function handleButtonClick(buttonId, displayFunc) {
+                    if (document.getElementById(buttonId).classList.contains('active')) {
+                        displayReposNoGroups(repos);
+                        updateButtonStyles('');
                     } else {
-                        return '<i class="fa fa-book" title="Source"></i>';
+                        displayFunc(repos);
+                        updateButtonStyles(buttonId);
                     }
                 }
 
-                // Create list items for each repo and append to the list
-                repos.forEach(repo => {
-                    // Get the first three topics or display a default message if none are available
-                    const topics = repo.topics.slice(0, 3);
-                    const topicsHtml = topics.length > 0 
-                        ? topics.map(topic => `<span>${topic}</span>`).join('')
-                        : '<span>No topics</span>';
-
-                    const language = repo.language || 'Other';
-                    const languageColor = getLanguageColor(language);
-                    const repoIcon = getRepoIcon(repo);
-
-                    const listItem = document.createElement('li');
-                    listItem.innerHTML = `
-                        <a href="${repo.html_url}" class="repo-item" target="_blank">
-                            <h2>${repo.name} <span class="repo-type">${repoIcon}</span></h2>
-                            <p>${repo.description || 'No description available'}</p>
-                            <div class="language-topics">
-                                <span class="language">
-                                    <span class="language-color" style="background-color: ${languageColor};"></span>
-                                    ${language}
-                                </span>
-                                <span class="topics">${topicsHtml}</span>
-                            </div>
-                        </a>
-                    `;
-                    repoList.appendChild(listItem);
+                document.getElementById('group-by-category').addEventListener('click', () => {
+                    handleButtonClick('group-by-category', displayReposByCategory);
                 });
+
+                document.getElementById('group-by-topic').addEventListener('click', () => {
+                    handleButtonClick('group-by-topic', displayReposByTopic);
+                });
+
+                document.getElementById('group-by-language').addEventListener('click', () => {
+                    handleButtonClick('group-by-language', displayReposByLanguage);
+                });
+
+                switch (initialGrouping) {
+                    case 'topic':
+                        displayReposByTopic(repos);
+                        updateButtonStyles('group-by-topic');
+                        break;
+                    case 'language':
+                        displayReposByLanguage(repos);
+                        updateButtonStyles('group-by-language');
+                        break;
+                    case 'none':
+                        displayReposNoGroups(repos);
+                        updateButtonStyles('group-no-groups');
+                        break;
+                    default:
+                        displayReposByCategory(repos);
+                        updateButtonStyles('group-by-category');
+                }
             } catch (error) {
                 console.error('Error fetching the repository data:', error);
             }
         }
 
-        // Call the function to display repos
         getRepos();
     </script>
 </body>
