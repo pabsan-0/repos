@@ -4,6 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>GitHub Repositories</title>
+    <link rel="icon" type="image/x-icon" href="https://pabsan-0.github.io/cv/favicon.ico">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
     <style>
         body {
@@ -13,12 +14,34 @@
             padding: 0 5% 0 7%;
         }
 
+		.gh-avatar-top {
+			margin: 2% auto -2.5% auto;
+			zoom: 30%;
+		    display: block;
+			/* display: none;  /* disable element, override other 'display' opt */
+		}
+
         h1 {
             text-align: center;
             color: #333;
             margin-bottom: 10px;
             padding-top: 2%;
         }
+
+		/* GH avatar left of the title */
+		h1::before
+		{
+		    content:'';
+		    background-image: url(https://pabsan-0.github.io/cv/favicon.ico); /*use tree here*/
+		    width: 270px;
+		    height: 270px;
+			zoom: 20%;
+			vertical-align: middle;
+			margin: 0px 4rem 20px 0px;
+		    display: inline-block;
+			display: none;  /* disable element, override other 'display' opt */
+		}
+
 
         .button-container {
             display: flex;
@@ -36,15 +59,35 @@
             border-radius: 4px;
             background-color: #6a737d; /* Softer background color */
             color: white;
-            transition: background-color 0.3s;
+            transition: background-color 0.1s;
         }
 
         .button-container button.active {
-            background-color: #4a5d6f; /* Darker shade for active button */
+            background-color: #3e4e5d; /* Darker shade for active button */
         }
 
         .button-container button:hover {
             background-color: #5c6f77;
+        }
+
+        .search-bar-container {
+            display: flex;
+            justify-content: center;
+            margin-top: 32px;
+            margin-bottom: 24px;
+			padding: 16px 10px;
+        }
+
+        #search-bar {
+			max-width: 1200px;
+            min-width: 40rem; 
+            width: 55%;
+            padding: 12px 20px; /* bar space around text */
+            justify: center; 
+            box-sizing: border-box;
+            font-size: 16px;
+            border: 1px solid #ccc;
+            border-radius: 4px;
         }
 
         /* Style for the container holding the repository list */
@@ -56,6 +99,7 @@
 
         #repo-container {
             max-width: 1200px; /* Set the maximum width you want for the container */
+            min-width: 40rem; 
             width: 55%; /* Make the container responsive */
             box-sizing: border-box; /* Include padding and border in the element's total width and height */
         }
@@ -195,12 +239,19 @@
     </style>
 </head>
 <body>
+	<img class="gh-avatar-top" src="https://pabsan-0.github.io/cv/favicon.ico"></img>
+		    
     <h1>Repositories of pabsan-0</h1>
     <div class="button-container">
         <button id="group-by-category" class="active">Group by Category</button>
         <button id="group-by-topic">Group by Topic</button>
         <button id="group-by-language">Group by Language</button>
     </div>
+
+    <div class="search-bar-container">
+        <input type="text" id="search-bar" placeholder="Search repositories..." autofocus />
+    </div>
+        
     <div id="repo-wrapper">
         <div id="repo-container"></div>
     </div>
@@ -422,6 +473,24 @@
                 console.error('Error fetching the repository data:', error);
             }
         }
+
+        document.getElementById('search-bar').addEventListener('input', function() {
+            const query = this.value.toLowerCase();
+            const repos = document.querySelectorAll('.repo-item');
+
+            repos.forEach(repo => {
+                const name = repo.querySelector('h2').innerText.toLowerCase();
+                const description = repo.querySelector('p').innerText.toLowerCase();
+                const topics = repo.querySelector('.topics').innerText.toLowerCase();
+                const language = repo.querySelector('.language').innerText.toLowerCase();
+
+                if (name.includes(query) || description.includes(query) || topics.includes(query) || language.includes(query)) {
+                    repo.style.display = '';
+                } else {
+                    repo.style.display = 'none';
+                }
+            });
+        });
 
         getRepos();
     </script>
