@@ -14,12 +14,12 @@
             padding: 0 5% 0 7%;
         }
 
-		.gh-avatar-top {
-			margin: 2% auto -2.5% auto;
-			zoom: 30%;
-		    display: block;
-			/* display: none;  /* disable element, override other 'display' opt */
-		}
+        .gh-avatar-top {
+            margin: 2% auto -2.5% auto;
+            zoom: 35%;
+            display: block;
+            /* display: none;  /* disable element, override other 'display' opt */
+        }
 
         h1 {
             text-align: center;
@@ -28,19 +28,19 @@
             padding-top: 2%;
         }
 
-		/* GH avatar left of the title */
-		h1::before
-		{
-		    content:'';
-		    background-image: url(https://pabsan-0.github.io/cv/favicon.ico); /*use tree here*/
-		    width: 270px;
-		    height: 270px;
-			zoom: 20%;
-			vertical-align: middle;
-			margin: 0px 4rem 20px 0px;
-		    display: inline-block;
-			display: none;  /* disable element, override other 'display' opt */
-		}
+        /* GH avatar left of the title */
+        h1::before
+        {
+            content:'';
+            background-image: url(https://pabsan-0.github.io/cv/favicon.ico); /*use tree here*/
+            width: 270px;
+            height: 270px;
+            zoom: 20%;
+            vertical-align: middle;
+            margin: 0px 4rem 20px 0px;
+            display: inline-block;
+            display: none;  /* disable element, override other 'display' opt */
+        }
 
 
         .button-container {
@@ -52,15 +52,21 @@
         }
 
         .button-container button {
+            flex: 1 1 auto; /* split horizontal space equally*/
+            min-width: 2rem; 
+            max-width: 12rem; 
             padding: 10px 20px;
             font-size: 16px;
+            white-space: nowrap;
             cursor: pointer;
             border: none;
             border-radius: 4px;
             background-color: #6a737d; /* Softer background color */
             color: white;
             transition: background-color 0.1s;
+            text-align: center;
         }
+
 
         .button-container button.active {
             background-color: #3e4e5d; /* Darker shade for active button */
@@ -75,12 +81,12 @@
             justify-content: center;
             margin-top: 32px;
             margin-bottom: 24px;
-			padding: 16px 10px;
+            padding: 16px 10px;
         }
 
         #search-bar {
-			max-width: 1200px;
-            min-width: 40rem; 
+            max-width: 1200px;
+            min-width: 20rem; 
             width: 55%;
             padding: 12px 20px; /* bar space around text */
             justify: center; 
@@ -99,7 +105,7 @@
 
         #repo-container {
             max-width: 1200px; /* Set the maximum width you want for the container */
-            min-width: 40rem; 
+            min-width: 20rem; 
             width: 55%; /* Make the container responsive */
             box-sizing: border-box; /* Include padding and border in the element's total width and height */
         }
@@ -236,11 +242,24 @@
             font-size: 18px;
             line-height: 1.4;
         }
+
+		/* Mobile changes: layouts spread vertically */ 
+        @media (max-width: 600px) {
+            .button-container { flex-direction: column; align-items: stretch; margin: 0 10px 0 10px; }
+            .button-container button { max-width: none; width: 100%; box-sizing: border-box; }
+			#search-bar { max-width: 100%; width: 100%; box-sizing: border-box; }
+			#repo-container { max-width: none; width: 100%; }
+			#sticky-index { display: none !important; }
+        }
+
     </style>
 </head>
 <body>
-	<img class="gh-avatar-top" src="https://pabsan-0.github.io/cv/favicon.ico"></img>
-		    
+
+    <a href="https://github.com/pabsan-0/">
+        <img class="gh-avatar-top" src="https://pabsan-0.github.io/cv/favicon.ico"></img>
+    </a>
+            
     <h1>Repositories of pabsan-0</h1>
     <div class="button-container">
         <button id="group-by-category" class="active">Group by Category</button>
@@ -311,7 +330,7 @@
                                 <span class="language-color" style="background-color: ${languageColor};"></span>
                                 ${language}
                             </span>
-                            <span class="topics">${repo.topics.map(topic => `<span>${topic}</span>`).join('')}</span>
+                            <span class="topics">${repo.topics.map(topic => `<span>${topic.replace('repos-', '.')}</span>`).join('')}</span>
                         </div>
                     </a>
                 </li>
