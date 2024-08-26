@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>GitHub Repositories</title>
+    <title>Repositories</title>
     <link rel="icon" type="image/x-icon" href="https://pabsan-0.github.io/cv/favicon.ico">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
     <style>
@@ -280,7 +280,6 @@
     </div>
 
     <script>
-        const apiUrl = 'https://api.github.com/users/pabsan-0/repos';
 
         // Utility function to get GitHub language color
         function getLanguageColor(language) {
@@ -440,14 +439,47 @@
         // Function to fetch and display repositories
         async function getRepos() {
             try {
+                const urlParams = new URLSearchParams(window.location.search);
+                const initialGrouping = urlParams.get('groupby') || 'category';
+                const argumentUser = urlParams.get('user') || null;
+
+
+				// Seek username target for github API requests
+				// User name priority: argument, github io url, or fallback 
+				let user = null;
+				if (argumentUser) {
+					user = argumentUser;
+				} else if (window.location.href.includes("github.io")) {
+					user = new URL(window.location.href).host.split('.')[0];
+				} else {
+					console.warn("Are you testing locally? Falling back to hardcoded user");
+					user = 'pabsan-0';
+				}
+				document.querySelector("h1").textContent = `Repositories of ${user}`;
+
+				/* 
+				// TODO: not a priority, this yields square image rather than circle
+				// Side request to handle user image
+                const user_info_res = await fetch(`https://api.github.com/users/${user}`);
+                if (!user_info_res.ok) throw new Error(`HTTP error! Status: ${user_info_res.status}`);
+                const user_info = await user_info_res.json();
+			 	if (user_info.avatar_url) {
+					document.querySelector("img").src = user_info.avatar_url;
+				}
+				*/
+
+				// Main request of repos and processing 
+				const apiUrl = `https://api.github.com/users/${user}/repos?per_page=100`;
+
                 const response = await fetch(apiUrl);
                 if (!response.ok) throw new Error(`HTTP error! Status: ${response.status}`);
                 const repos = await response.json();
 
                 document.getElementById('repo-count').textContent = repos.length;
 
-                const urlParams = new URLSearchParams(window.location.search);
-                const initialGrouping = urlParams.get('groupby') || 'category';
+				if (repos.length == 100) {
+					console.warn("Repos number equals 100, some may be missing! Github API pagination still to be implemented.")
+				}
 
                 function handleButtonClick(buttonId, displayFunc) {
                     if (document.getElementById(buttonId).classList.contains('active')) {
