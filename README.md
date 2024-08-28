@@ -6,6 +6,8 @@ Live at [pabsan-0.github.io/repos](https://pabsan-0.github.io/repos).
 
 This page allows me to sort my repos as I like by parsing their `topics` for a keyword prefix, getting all data from a single call to Github's public API.
 
+![image](preview.png)
+
 ## Features 
 
 ### Groups 
