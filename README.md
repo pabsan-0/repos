@@ -2,7 +2,7 @@
 
 This repo holds a static website that provides a custom frontend to my Github repositories.
 
-Live at [pabsan-0.github.io/repos](pabsan-0.github.io/repos).
+Live at [pabsan-0.github.io/repos](https://pabsan-0.github.io/repos).
 
 This page allows me to sort my repos as I like by parsing their `topics` for a keyword prefix, getting all data from a single call to Github's public API.
 
